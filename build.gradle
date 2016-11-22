@@ -1,0 +1,49 @@
+subprojects { project ->
+  group = GROUP
+  version = VERSION_NAME
+
+  repositories {
+    mavenCentral()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+
+  buildscript {
+    repositories {
+      mavenCentral()
+      maven {
+        url "https://plugins.gradle.org/m2/"
+      }
+    }
+    dependencies {
+      classpath 'com.android.tools.build:gradle:2.2.2'
+    }
+  }
+}
+
+ext {
+  minSdkVersion = 9
+  targetSdkVersion = 24
+  compileSdkVersion = 24
+  buildToolsVersion = '24.0.2'
+  sourceCompatibilityVersion = JavaVersion.VERSION_1_7
+  targetCompatibilityVersion = JavaVersion.VERSION_1_7
+}
+
+def papercutLatestReleaseVersion = '0.0.1'
+
+ext.deps = [
+    // Third Party
+    javaparser: 'com.github.javaparser:javaparser-core:2.4.0',
+
+    // Test dependencies
+    junit: 'junit:junit:4.12',
+
+    compiletesting: 'com.google.testing.compile:compile-testing:0.9',
+    autoservice: 'com.google.auto.service:auto-service:1.0-rc2',
+    autocommon: 'com.google.auto:auto-common:0.6',
+
+    papercut: "ie.stu:papercut:$papercutLatestReleaseVersion",
+    papercutCompiler: "ie.stu:papercut-compiler:$papercutLatestReleaseVersion"
+]
