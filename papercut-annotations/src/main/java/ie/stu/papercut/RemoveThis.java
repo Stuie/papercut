@@ -34,4 +34,9 @@ public @interface RemoveThis {
      * Specify whether a failure to meet the removal condition should break the build.
      */
     boolean stopShip() default false;
+
+    /**
+     * Specify if Papercut should attempt to remove the item during the build.
+     */
+    boolean attemptRemoval() default false;
 }
