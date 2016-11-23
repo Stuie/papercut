@@ -25,7 +25,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
-import java.papercut.RemoveThis;
+import ie.stu.papercut.RemoveThis;
 import java.util.Set;
 
 @SupportedAnnotationTypes("ie.stu.papercut.RemoveThis")
