@@ -15,32 +15,52 @@
  */
 package ie.stu.papercut.compiler;
 
+import com.google.auto.service.AutoService;
 import ie.stu.papercut.RemoveThis;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 
 @SupportedAnnotationTypes("ie.stu.papercut.RemoveThis")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-public class AnnotationProcessor extends AbstractProcessor{
+@AutoService(Processor.class)
+public class AnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        System.out.println("PROCESSING PAPERCUT ANNOTATIONS");
         for (final Element element : roundEnv.getElementsAnnotatedWith(RemoveThis.class)) {
-            System.out.println("FOUND A REMOVETHIS ANNOTATION");
             final String objectType = element.getSimpleName().toString();
+            final RemoveThis annotation = element.getAnnotation(RemoveThis.class);
 
-            if (element.getAnnotation(RemoveThis.class).stopShip()) {
-                System.out.println("ANNOTATION SAYS TO STOP SHIP!");
-                throw new IllegalStateException("STOP SHIP: @RemoveThis specified");
+            final boolean stopShip = annotation.stopShip();
 
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = null;
+
+            try {
+                date = simpleDateFormat.parse(annotation.date());
+            } catch (ParseException e) {
+                throw new RuntimeException("STOP SHIP: Incorrect date format in @RemoveThis annotation. Please " +
+                        "follow YYYY-MM-DD format.");
+            }
+
+            if (date.before(new Date()) || date.equals(new Date())) {
+                if (stopShip) {
+                    throw new RuntimeException("STOP SHIP: @RemoveThis found.");
+                } else {
+                    //TODO Figure out the fricking logger
+                    System.out.println("@RemoveThis found.");
+                }
             }
         }
 

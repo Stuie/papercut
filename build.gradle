@@ -30,16 +30,16 @@ ext {
 def papercutLatestReleaseVersion = '0.0.1'
 
 ext.deps = [
-    // Third Party
-    javaparser: 'com.github.javaparser:javaparser-core:2.4.0',
+        // Third Party
+        javaparser      : 'com.github.javaparser:javaparser-core:2.4.0',
 
-    // Test dependencies
-    junit: 'junit:junit:4.12',
+        // Test dependencies
+        junit           : 'junit:junit:4.12',
 
-    compiletesting: 'com.google.testing.compile:compile-testing:0.9',
-    autoservice: 'com.google.auto.service:auto-service:1.0-rc2',
-    autocommon: 'com.google.auto:auto-common:0.6',
+        compiletesting  : 'com.google.testing.compile:compile-testing:0.9',
+        autoservice     : 'com.google.auto.service:auto-service:1.0-rc2',
+        autocommon      : 'com.google.auto:auto-common:0.6',
 
-    papercut: "ie.stu:papercut:$papercutLatestReleaseVersion",
-    papercutCompiler: "ie.stu:papercut-compiler:$papercutLatestReleaseVersion"
+        papercut        : "ie.stu:papercut:$papercutLatestReleaseVersion",
+        papercutCompiler: "ie.stu:papercut-compiler:$papercutLatestReleaseVersion"
 ]

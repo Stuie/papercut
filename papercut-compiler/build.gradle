@@ -4,12 +4,12 @@ sourceCompatibility = rootProject.ext.sourceCompatibilityVersion
 targetCompatibility = rootProject.ext.targetCompatibilityVersion
 
 dependencies {
-  compile project(':papercut-annotations')
-  compile deps.autoservice
-  compile deps.autocommon
-  compileOnly files(org.gradle.internal.jvm.Jvm.current().getToolsJar())
+    compile project(':papercut-annotations')
+    compile deps.autoservice
+    compile deps.autocommon
+    compileOnly files(org.gradle.internal.jvm.Jvm.current().getToolsJar())
 
-  testCompile deps.junit
+    testCompile deps.junit
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
