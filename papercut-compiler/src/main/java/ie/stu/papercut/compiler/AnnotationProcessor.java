@@ -39,27 +39,36 @@ public class AnnotationProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         for (final Element element : roundEnv.getElementsAnnotatedWith(RemoveThis.class)) {
-            final String objectType = element.getSimpleName().toString();
             final RemoveThis annotation = element.getAnnotation(RemoveThis.class);
 
             final boolean stopShip = annotation.stopShip();
 
             final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = null;
+            Date date;
 
             try {
                 date = simpleDateFormat.parse(annotation.date());
-            } catch (ParseException e) {
+            } catch (final ParseException e) {
                 throw new RuntimeException("STOP SHIP: Incorrect date format in @RemoveThis annotation. Please " +
                         "follow YYYY-MM-DD format.");
             }
 
+            // TODO Need to include the stacktrace when logging these messages so people can find the right file.
             if (date.before(new Date()) || date.equals(new Date())) {
                 if (stopShip) {
-                    throw new RuntimeException("STOP SHIP: @RemoveThis found.");
+                    if (!annotation.value().isEmpty()) {
+                        throw new RuntimeException("STOP SHIP: @RemoveThis found for " + annotation.value());
+                    } else {
+                        throw new RuntimeException("STOP SHIP: @RemoveThis found with no description.");
+                    }
                 } else {
-                    //TODO Figure out the fricking logger
-                    System.out.println("@RemoveThis found.");
+                    if (!annotation.value().isEmpty()) {
+                        //TODO Figure out the fricking logger
+                        System.out.println("@RemoveThis found for " + annotation.value());
+                    } else {
+                        //TODO Figure out the fricking logger
+                        System.out.println("@RemoveThis found with no description.");
+                    }
                 }
             }
         }

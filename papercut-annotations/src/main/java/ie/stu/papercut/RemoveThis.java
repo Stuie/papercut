@@ -24,6 +24,11 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE, ElementType.CONSTRUCTOR})
 public @interface RemoveThis {
     /**
+     * Specify a bare string that can be used to describe when to remove some code if there's no known date.
+     */
+    String value() default "";
+
+    /**
      * Specify a date at which the item should be removed.
      *
      * Currently only YYYY-MM-DD format is supported.
