@@ -30,7 +30,7 @@ Download
 
 ```groovy
 dependencies {
-	compile: 'ie.stu:papercut:0.0.1'
+	compile: 'ie.stu:papercut-annotations:0.0.1'
 	annotationProcessor: 'ie.stu:papercut-compiler:0.0.1'
 }
 ```
