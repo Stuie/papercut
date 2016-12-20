@@ -18,14 +18,12 @@ package ie.stu.papercut.compiler;
 import com.google.auto.service.AutoService;
 import ie.stu.papercut.RemoveThis;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,11 +33,12 @@ import java.util.Set;
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
-
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         for (final Element element : roundEnv.getElementsAnnotatedWith(RemoveThis.class)) {
             final RemoveThis annotation = element.getAnnotation(RemoveThis.class);
+            final Messager messager = processingEnv.getMessager();
+            final PackageElement packageElement = processingEnv.getElementUtils().getPackageOf(element);
 
             final boolean stopShip = annotation.stopShip();
 
@@ -49,7 +48,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             try {
                 date = simpleDateFormat.parse(annotation.date());
             } catch (final ParseException e) {
-                throw new RuntimeException("STOP SHIP: Incorrect date format in @RemoveThis annotation. Please " +
+                throw new RuntimeException("Incorrect date format in @RemoveThis annotation. Please " +
                         "follow YYYY-MM-DD format.");
             }
 
@@ -57,17 +56,21 @@ public class AnnotationProcessor extends AbstractProcessor {
             if (date.before(new Date()) || date.equals(new Date())) {
                 if (stopShip) {
                     if (!annotation.value().isEmpty()) {
-                        throw new RuntimeException("STOP SHIP: @RemoveThis found for " + annotation.value());
+                        messager.printMessage(Diagnostic.Kind.ERROR,
+                                "@RemoveThis found with description '" + annotation.value()
+                                        + "' at: ", element);
                     } else {
-                        throw new RuntimeException("STOP SHIP: @RemoveThis found with no description.");
+                        messager.printMessage(Diagnostic.Kind.ERROR, "STOP SHIP: @RemoveThis found at: ",
+                                element);
                     }
                 } else {
                     if (!annotation.value().isEmpty()) {
-                        //TODO Figure out the fricking logger
-                        System.out.println("@RemoveThis found for " + annotation.value());
+                        messager.printMessage(Diagnostic.Kind.WARNING,
+                                "@RemoveThis found with description '" + annotation.value(), element);
                     } else {
-                        //TODO Figure out the fricking logger
-                        System.out.println("@RemoveThis found with no description.");
+                        messager.printMessage(Diagnostic.Kind.WARNING,
+                                "@RemoveThis found without description at: " + packageElement.getSimpleName(),
+                                element);
                     }
                 }
             }
