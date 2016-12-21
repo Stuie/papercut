@@ -1,16 +1,16 @@
 Papercut
 ========
 
-Remember to remove the stuff you don't need from your codebase.
+Keep your codebase simple.
 
-  * Tag parts of your code that should not make it to production
+  * Annotate parts of your code that shouldn't make it to production
   * Automatically fail your build
-  * Keep your codebase simple
+  * Remember to remove code you don't need
 
 ```java
 class TemporaryHack {
     @RemoveThis
-	private static final boolean DEBUG = true;
+    private static final boolean DEBUG = true;
 }
 ```
 
