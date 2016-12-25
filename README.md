@@ -7,6 +7,9 @@ Keep your codebase simple.
   * Automatically fail your build
   * Remember to remove code you don't need
 
+@RemoveThis
+-----------
+
 ```java
 class TemporaryHack {
     @RemoveThis
@@ -37,7 +40,7 @@ Your build will fail at compile time by default.
 :app:compileDebugJavaWithJavac FAILED
 ```
 
-If you set the `stopShip` parameter to false in the annotation then you will only receive a warning.
+If you set the `stopShip` parameter to false in the annotation then you will only receive a warning. This matches the behavior of `Refactor`.
 
 ```java
 @RemoveThis(value = "After SOME_FEATURE has launched", stopShip = false)
@@ -53,6 +56,14 @@ private void someHackyMethod() {
                  ^
 1 warning
 ```
+
+@Refactor
+---------
+
+`@Refactor` exactly matches `@RemoveThis`, but uses warnings instead of failing your build by default. You can set the `stopShip` parameter to `true` to cause a build failure with a `@Refactor` annotation if you wish.
+
+@Milestone
+----------
 
 You can define milestones by which you would like to refactor or remove code. When you reach a milestone just delete
 the `@Milestone` annotated field. If you use constants as in the first example below then deleting the field
