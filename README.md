@@ -54,18 +54,53 @@ private void someHackyMethod() {
 1 warning
 ```
 
-For documentation and additional information, see [the website][1].
+You can define milestones by which you would like to refactor or remove code. When you reach a milestone just delete
+the `@Milestone` annotated field. If you use constants as in the first example below then deleting the field
+should cause your IDE to highlight the instances that referenced it. If you use plain strings in your `@RemoveThis` or
+`@Refactor` annotations then they must match your defined `@Milestone`s exactly, as in the second example.
+
+```java
+public class Milestones {
+    @Milestone("LOGIN_REDESIGN") public static final String LOGIN_REDESIGN = "LOGIN_REDESIGN";
+    @Milestone("SOME_FEATURE") public static final String SOME_FEATURE = "SOME_FEATURE";
+    @Milestone("VERSION_2") public static final String VERSION_2 = "VERSION_2";
+}
+
+public class ImportantThingDoer {
+    @Refactor(milestone = Milestones.LOGIN_REDESIGN)
+    private void onlyUsedByLoginScreen() {
+
+    }
+
+    @RemoveThis(milestone = "VERSION_2")
+    public void callOldAPI() {
+
+    }
+}
+```
+
+For full documentation and additional information, see [the website][1].
 
 Download
 --------
 
 ```groovy
 dependencies {
-	compile: 'ie.stu:papercut-annotations:0.0.2'
-	annotationProcessor: 'ie.stu:papercut-compiler:0.0.2'
+	compile: 'ie.stu:papercut-annotations:0.0.3'
+	annotationProcessor: 'ie.stu:papercut-compiler:0.0.3'
 }
 ```
 
+To use Papercut only in release builds you can alter the annotationProcessor line to use `releaseAnnotationProcessor` or
+`debugAnnotationProcessor` to suit your needs. Delaying the execution until you're trying to build your release version
+may be lead to unexpected build failures.
+
+```groovy
+dependencies {
+    compile: 'ie.stu:papercut-annotation:0.0.3'
+    releaseAnnotationProcessor: 'ie.stu:papercut-compiler:0.0.3'
+}
+```
 
 License
 -------

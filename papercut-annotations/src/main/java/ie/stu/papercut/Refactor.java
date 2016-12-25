@@ -21,23 +21,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark some code that you want to remove from your codebase in the future.
+ * Mark some code that you want to refactor in your codebase.
  *
- * The default behavior for a plain annotation is to fail your build. You can provide descriptive text, set a code
- * expiration date, switch from failures to warnings, or use {@link Milestone}s for managing the removal.
+ * The default behavior for a plain annotation is to print a warning during your build. You can provide descriptive
+ * text, set a code expiration date, switch from warnings to failures, or use {@link Milestone}s for managing the
+ * refactor.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.TYPE, ElementType.CONSTRUCTOR})
-public @interface RemoveThis {
+public @interface Refactor {
     /**
-     * Specify a string that can be used to describe when to remove some code if there's no known date.
+     * Specify a string that can be used to describe when to refactor some code.
      *
-     * @return Descriptive text to identify when code should be removed
+     * @return Descriptive text to identify when code should be refactored
      */
     String value() default "";
 
     /**
-     * Specify a date at which the item should be removed.
+     * Specify a date at which the item should be refactored.
      *
      * Currently only YYYY-MM-DD format is supported.
      *
@@ -46,17 +47,17 @@ public @interface RemoveThis {
     String date() default "";
 
     /**
-     * Specify whether a failure to meet the removal condition should break the build. Defaults to true.
+     * Specify whether a failure to meet the refactor condition should break the build. Defaults to false.
      *
      * @return Whether to fail your build or not
      */
-    boolean stopShip() default true;
+    boolean stopShip() default false;
 
     /**
      * Specify a milestone by which the code should have been removed. Must exactly match a {@link Milestone} annotation
      * specified somewhere in your codebase.
      *
-     * @return The {@link Milestone} to remove code by
+     * @return The {@link Milestone} to refactor code by
      */
     String milestone() default "";
 }

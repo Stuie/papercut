@@ -16,66 +16,119 @@
 package ie.stu.papercut.compiler;
 
 import com.google.auto.service.AutoService;
+import ie.stu.papercut.Milestone;
+import ie.stu.papercut.Refactor;
 import ie.stu.papercut.RemoveThis;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
-@SupportedAnnotationTypes("ie.stu.papercut.RemoveThis")
+@SupportedAnnotationTypes({
+        "ie.stu.papercut.RemoveThis",
+        "ie.stu.papercut.Refactor",
+        "ie.stu.papercut.Milestone"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
+    private static final Set<String> milestones = new HashSet<>();
+
+    private Messager messager;
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+
+        messager = processingEnv.getMessager();
+    }
+
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        for (final Element element : roundEnv.getElementsAnnotatedWith(RemoveThis.class)) {
-            final RemoveThis annotation = element.getAnnotation(RemoveThis.class);
-            final Messager messager = processingEnv.getMessager();
-            final PackageElement packageElement = processingEnv.getElementUtils().getPackageOf(element);
+        buildMilestoneList(roundEnv.getElementsAnnotatedWith(Milestone.class));
 
-            final boolean stopShip = annotation.stopShip();
+        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(RemoveThis.class));
+        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(Refactor.class));
 
-            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date date;
+        return true;
+    }
 
-            try {
-                date = simpleDateFormat.parse(annotation.date());
-            } catch (final ParseException e) {
-                throw new RuntimeException("Incorrect date format in @RemoveThis annotation. Please " +
-                        "follow YYYY-MM-DD format.");
+    private void buildMilestoneList(Set<? extends Element> elements) {
+        for (final Element element : elements) {
+            final Milestone milestone = element.getAnnotation(Milestone.class);
+            final String milestoneName = milestone.value();
+
+            milestones.add(milestoneName);
+        }
+    }
+
+    private void parseTechDebtElements(Set<? extends Element> elements) {
+        for (final Element element : elements) {
+            final RemoveThis removeThisAnnotation = element.getAnnotation(RemoveThis.class);
+            final Refactor refactorAnnotation = element.getAnnotation(Refactor.class);
+
+            // Handling the case where both annotations are present would be overly complicated. Since they're
+            // essentially interchangeable I doubt anyone will encounter this. If you're reading this because you
+            // encountered the issue then please pick between the annotations. The docs should help you choose.
+            if (removeThisAnnotation != null && refactorAnnotation != null) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Specifying @RemoveThis and @Refactor on the same" +
+                        "code is not currently supported.", element);
             }
 
-            // TODO Need to include the stacktrace when logging these messages so people can find the right file.
-            if (date.before(new Date()) || date.equals(new Date())) {
-                if (stopShip) {
-                    if (!annotation.value().isEmpty()) {
-                        messager.printMessage(Diagnostic.Kind.ERROR,
-                                "@RemoveThis found with description '" + annotation.value()
-                                        + "' at: ", element);
-                    } else {
-                        messager.printMessage(Diagnostic.Kind.ERROR, "STOP SHIP: @RemoveThis found at: ",
-                                element);
-                    }
+            String description;
+            String givenDate;
+            boolean stopShip;
+            String milestone;
+
+            if (removeThisAnnotation != null) {
+                description = removeThisAnnotation.value();
+                givenDate = removeThisAnnotation.date();
+                stopShip = removeThisAnnotation.stopShip();
+                milestone = removeThisAnnotation.milestone();
+            } else {
+                description = refactorAnnotation.value();
+                givenDate = refactorAnnotation.date();
+                stopShip = refactorAnnotation.stopShip();
+                milestone = refactorAnnotation.milestone();
+            }
+
+            final Diagnostic.Kind messageKind = stopShip ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            Date date = null;
+
+            try {
+                if (!givenDate.isEmpty()) {
+                    date = simpleDateFormat.parse(givenDate);
+                }
+            } catch (final ParseException e) {
+                messager.printMessage(Diagnostic.Kind.ERROR,"Incorrect date format in @RemoveThis annotation." +
+                        "Please use YYYY-MM-DD format.");
+            }
+
+            if (dateConditionMet(date) || milestoneConditionMet(milestone)) {
+                if (!description.isEmpty()) {
+                    messager.printMessage(messageKind, "@RemoveThis found with description '" + description
+                                    + "' at: ", element);
                 } else {
-                    if (!annotation.value().isEmpty()) {
-                        messager.printMessage(Diagnostic.Kind.WARNING,
-                                "@RemoveThis found with description '" + annotation.value(), element);
-                    } else {
-                        messager.printMessage(Diagnostic.Kind.WARNING,
-                                "@RemoveThis found without description at: " + packageElement.getSimpleName(),
-                                element);
-                    }
+                    messager.printMessage(messageKind, "@RemoveThis found at: ", element);
                 }
             }
         }
+    }
 
-        return true;
+    private boolean dateConditionMet(final Date date) {
+        return date != null && (date.after(new Date()) || date.equals(new Date()));
+    }
+
+    private boolean milestoneConditionMet(final String milestone) {
+        return !milestones.contains(milestone);
     }
 }
