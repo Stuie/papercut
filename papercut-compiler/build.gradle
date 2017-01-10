@@ -7,9 +7,11 @@ dependencies {
     compile project(':papercut-annotations')
     compile deps.autoservice
     compile deps.autocommon
+    compile deps.jsemver
     compileOnly files(org.gradle.internal.jvm.Jvm.current().getToolsJar())
 
     testCompile deps.junit
+    testCompile deps.mockito
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

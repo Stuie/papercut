@@ -7,8 +7,10 @@ Keep your codebase simple.
   * Automatically fail your build
   * Remember to remove code you don't need
 
-@RemoveThis
+@RemoveThis and @Refactor
 -----------
+
+The `@RemoveThis` and `@Refactor` annotations can be used interchangeably, but a `@RemoveThis` will trigger a build failure by default, whereas a `@Refactor` will only trigger a warning.
 
 ```java
 class TemporaryHack {
@@ -57,10 +59,35 @@ private void someHackyMethod() {
 1 warning
 ```
 
-@Refactor
----------
+With a small modification to your build.gradle file you can use version codes or version names instead of dates in your annotations.
 
-`@Refactor` exactly matches `@RemoveThis`, but uses warnings instead of failing your build by default. You can set the `stopShip` parameter to `true` to cause a build failure with a `@Refactor` annotation if you wish.
+In the case of an Android app, you can pass your version code and name to Papercut using the configuration below.
+
+```groovy
+android {
+    defaultConfig {
+        versionCode 4
+        versionName "0.4.0"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ['versionCode': String.valueOf(defaultConfig.versionCode),
+                             'versionName': defaultConfig.versionName]
+            }
+        }
+    }
+}
+```
+
+The arguments must both be passed as strings. The `versionCode` will be passed to `Integer.parseInt()` and the `versionName` must match the [semantic versioning schema][2].
+
+You can then use the `versionCode` or `versionName` parameters in your annotations as below.
+
+```java
+@Refactor(versionName = "0.4.0")
+private void fetchSomethingRemote() {
+    // Temporary hack, please remove
+}
+```
 
 @Milestone
 ----------
@@ -97,8 +124,8 @@ Download
 
 ```groovy
 dependencies {
-	compile: 'ie.stu:papercut-annotations:0.0.3'
-	annotationProcessor: 'ie.stu:papercut-compiler:0.0.3'
+	compile: 'ie.stu:papercut-annotations:0.0.4'
+	annotationProcessor: 'ie.stu:papercut-compiler:0.0.4'
 }
 ```
 
@@ -108,8 +135,8 @@ may be lead to unexpected build failures.
 
 ```groovy
 dependencies {
-    compile: 'ie.stu:papercut-annotation:0.0.3'
-    releaseAnnotationProcessor: 'ie.stu:papercut-compiler:0.0.3'
+    compile: 'ie.stu:papercut-annotation:0.0.4'
+    releaseAnnotationProcessor: 'ie.stu:papercut-compiler:0.0.4'
 }
 ```
 
@@ -133,4 +160,5 @@ License
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 [1]: http://stuie.github.com/papercut/
+[2]: http://semver.org
 [snap]: https://oss.sonatype.org/content/repositories/snapshots/
