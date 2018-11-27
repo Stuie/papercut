@@ -135,7 +135,7 @@ may be lead to unexpected build failures.
 
 ```groovy
 dependencies {
-    compile: 'ie.stu:papercut-annotation:0.0.4'
+    compile: 'ie.stu:papercut-annotations:0.0.4'
     releaseAnnotationProcessor: 'ie.stu:papercut-compiler:0.0.4'
 }
 ```
