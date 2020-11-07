@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Gilbert
+ * Copyright (C) 2020 Stuart Gilbert
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,194 +13,153 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ie.stu.papercut.compiler;
+package ie.stu.papercut.compiler
 
-import com.github.zafarkhaja.semver.Version;
-import com.google.auto.service.AutoService;
-import ie.stu.papercut.Milestone;
-import ie.stu.papercut.Refactor;
-import ie.stu.papercut.RemoveThis;
+import com.github.zafarkhaja.semver.Version
+import javax.lang.model.SourceVersion
+import com.google.auto.service.AutoService
+import javax.lang.model.element.TypeElement
+import ie.stu.papercut.Milestone
+import ie.stu.papercut.Refactor
+import java.lang.IllegalArgumentException
+import java.text.ParseException
+import javax.tools.Diagnostic
+import java.text.SimpleDateFormat
+import java.util.Date
+import javax.annotation.processing.AbstractProcessor
+import javax.annotation.processing.Messager
+import javax.annotation.processing.ProcessingEnvironment
+import javax.annotation.processing.Processor
+import javax.annotation.processing.RoundEnvironment
+import javax.annotation.processing.SupportedAnnotationTypes
+import javax.annotation.processing.SupportedOptions
+import javax.annotation.processing.SupportedSourceVersion
+import javax.lang.model.element.Element
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
-import javax.annotation.processing.SupportedSourceVersion;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-@SupportedAnnotationTypes({
-        "ie.stu.papercut.RemoveThis",
+@SupportedAnnotationTypes(
         "ie.stu.papercut.Refactor",
         "ie.stu.papercut.Milestone"
-})
+)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedOptions({
-        "versionCode",
-        "versionName"
-})
-@AutoService(Processor.class)
-public class AnnotationProcessor extends AbstractProcessor {
-    private static final String OPTION_VERSION_CODE = "versionCode";
-    private static final String OPTION_VERSION_NAME = "versionName";
-    private static final Set<String> milestones = new HashSet<>();
+@SupportedOptions(OPTION_VERSION_CODE, OPTION_VERSION_NAME)
+@AutoService(Processor::class)
+class AnnotationProcessor : AbstractProcessor() {
+    private val milestones = mutableSetOf<String>()
+    private lateinit var messager: Messager
+    private var versionCode: String? = null
+    private var versionName: String? = null
 
-    private Messager messager;
-    private String versionCode;
-    private String versionName;
-
-    @Override
-    public synchronized void init(final ProcessingEnvironment processingEnv) {
-        super.init(processingEnv);
-
-        versionCode = processingEnv.getOptions().get(OPTION_VERSION_CODE);
-        versionName = processingEnv.getOptions().get(OPTION_VERSION_NAME);
-
-        messager = processingEnv.getMessager();
+    @Synchronized
+    override fun init(processingEnv: ProcessingEnvironment) {
+        super.init(processingEnv)
+        versionCode = processingEnv.options[OPTION_VERSION_CODE]
+        versionName = processingEnv.options[OPTION_VERSION_NAME]
+        messager = processingEnv.messager
     }
 
-    @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        buildMilestoneList(roundEnv.getElementsAnnotatedWith(Milestone.class));
-
-        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(RemoveThis.class));
-        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(Refactor.class));
-
-        return true;
+    override fun process(annotations: Set<TypeElement?>, roundEnv: RoundEnvironment): Boolean {
+        buildMilestoneList(roundEnv.getElementsAnnotatedWith(Milestone::class.java))
+        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(Refactor::class.java))
+        return true
     }
 
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latest();
+    override fun getSupportedSourceVersion(): SourceVersion {
+        return SourceVersion.latest()
     }
 
-    private void buildMilestoneList(Set<? extends Element> elements) {
-        for (final Element element : elements) {
-            final Milestone milestone = element.getAnnotation(Milestone.class);
-            final String milestoneName = milestone.value();
-
-            milestones.add(milestoneName);
+    private fun buildMilestoneList(elements: Set<Element>) {
+        for (element in elements) {
+            val milestone = element.getAnnotation(Milestone::class.java)
+            val milestoneName: String = milestone.value
+            milestones.add(milestoneName)
         }
     }
 
-    private void parseTechDebtElements(Set<? extends Element> elements) {
-        for (final Element element : elements) {
-            final RemoveThis removeThisAnnotation = element.getAnnotation(RemoveThis.class);
-            final Refactor refactorAnnotation = element.getAnnotation(Refactor.class);
+    private fun parseTechDebtElements(elements: Set<Element>) {
+        elements.forEach { element ->
+            element.getAnnotation(Refactor::class.java)?.let { refactorAnnotation ->
+                val description: String = refactorAnnotation.value
+                val givenDate = refactorAnnotation.date
+                val stopShip = refactorAnnotation.stopShip
+                val milestone: String = refactorAnnotation.milestone
+                val versionCode: String = refactorAnnotation.versionCode
+                val versionName: String = refactorAnnotation.versionName
+                val annotationType: String = Refactor::class.java.simpleName
 
-            // Handling the case where both annotations are present would be overly complicated. Since they're
-            // essentially interchangeable I doubt anyone will encounter this. If you're reading this because you
-            // encountered the issue then please pick between the annotations. The docs should help you choose.
-            if (removeThisAnnotation != null && refactorAnnotation != null) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Specifying @RemoveThis and @Refactor on the same" +
-                        "code is not currently supported.", element);
-            }
-
-            final String description;
-            final String givenDate;
-            final boolean stopShip;
-            final String milestone;
-            final String versionCode;
-            final String versionName;
-            final String annotationType;
-
-            if (removeThisAnnotation != null) {
-                description = removeThisAnnotation.value();
-                givenDate = removeThisAnnotation.date();
-                stopShip = removeThisAnnotation.stopShip();
-                milestone = removeThisAnnotation.milestone();
-                versionCode = removeThisAnnotation.versionCode();
-                versionName = removeThisAnnotation.versionName();
-                annotationType = RemoveThis.class.getSimpleName();
-            } else {
-                description = refactorAnnotation.value();
-                givenDate = refactorAnnotation.date();
-                stopShip = refactorAnnotation.stopShip();
-                milestone = refactorAnnotation.milestone();
-                versionCode = refactorAnnotation.versionCode();
-                versionName = refactorAnnotation.versionName();
-                annotationType = Refactor.class.getSimpleName();
-            }
-
-            final Diagnostic.Kind messageKind = stopShip ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
-            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-            Date date = null;
-
-            try {
-                if (!givenDate.isEmpty()) {
-                    date = simpleDateFormat.parse(givenDate);
-                }
-            } catch (final ParseException e) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "Incorrect date format in Papercut annotation." +
-                        "Please use YYYY-MM-DD format.");
-            }
-
-            boolean breakConditionMet = noConditionsSet(date, milestone, versionCode, versionName);
-
-            breakConditionMet = breakConditionMet || dateConditionMet(date);
-            breakConditionMet = breakConditionMet || milestoneConditionMet(milestone);
-            breakConditionMet = breakConditionMet || versionCodeConditionMet(versionCode);
-            breakConditionMet = breakConditionMet || versionNameConditionMet(versionName, element);
-
-            if (breakConditionMet) {
-                if (!description.isEmpty()) {
-                    messager.printMessage(messageKind, String.format("@%1$s found with description %2$s at: ",
-                            annotationType, description), element);
+                val messageKind = if (stopShip) {
+                    Diagnostic.Kind.ERROR
                 } else {
-                    messager.printMessage(messageKind, String.format("@%1$s found at: ", annotationType), element);
+                    Diagnostic.Kind.WARNING
+                }
+
+                val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+                val date: Date? = try {
+                    if (givenDate.isNotEmpty()) {
+                        simpleDateFormat.parse(givenDate)
+                    } else {
+                        null
+                    }
+                } catch (e: ParseException) {
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Incorrect date format in Papercut annotation." +
+                            "Please use YYYY-MM-DD format.")
+                    null
+                }
+
+                var breakConditionMet = noConditionsSet(date, milestone, versionCode, versionName)
+                breakConditionMet = breakConditionMet || dateConditionMet(date)
+                breakConditionMet = breakConditionMet || milestoneConditionMet(milestone)
+                breakConditionMet = breakConditionMet || versionCodeConditionMet(versionCode)
+                breakConditionMet = breakConditionMet || versionNameConditionMet(versionName, element)
+
+                if (breakConditionMet) {
+                    if (description.isNotEmpty()) {
+                        messager.printMessage(messageKind, String.format("@%1\$s found with description %2\$s at: ",
+                                annotationType, description), element)
+                    } else {
+                        messager.printMessage(messageKind, String.format("@%1\$s found at: ", annotationType), element)
+                    }
                 }
             }
         }
     }
 
-    private boolean noConditionsSet(final Date date, final String milestone, final String versionCode,
-                                    final String versionName) {
-        return date == null && milestone.isEmpty() && versionCode.isEmpty() && versionName.isEmpty();
+    private fun noConditionsSet(date: Date?, milestone: String, versionCode: String,
+                                versionName: String): Boolean {
+        return date == null && milestone.isEmpty() && versionCode.isEmpty() && versionName.isEmpty()
     }
 
-    private boolean dateConditionMet(final Date date) {
-        return date != null && (date.before(new Date()) || date.equals(new Date()));
+    private fun dateConditionMet(date: Date?): Boolean {
+        return date != null && (date.before(Date()) || date == Date())
     }
 
-    private boolean milestoneConditionMet(final String milestone) {
-        return !milestone.isEmpty() && !milestones.contains(milestone);
+    private fun milestoneConditionMet(milestone: String): Boolean {
+        return milestone.isNotEmpty() && !milestones.contains(milestone)
     }
 
-    private boolean versionCodeConditionMet(final String versionCode) {
-        return !versionCode.isEmpty() && Integer.parseInt(versionCode) <= Integer.parseInt(this.versionCode);
+    private fun versionCodeConditionMet(versionCode: String): Boolean {
+        return versionCode.isNotEmpty() && versionCode.toInt() <= this.versionCode!!.toInt()
     }
 
-    private boolean versionNameConditionMet(final String versionName, final Element element) {
+    private fun versionNameConditionMet(versionName: String, element: Element): Boolean {
         // Drop out quickly if there's no versionName set otherwise the try/catch below is doomed to fail.
-        if (versionName.isEmpty()) return false;
-
-        int comparison;
-
-        try {
-            final Version conditionVersion = Version.valueOf(versionName);
-            final Version currentVersion = Version.valueOf(this.versionName);
-
-            comparison = Version.BUILD_AWARE_ORDER.compare(conditionVersion, currentVersion);
-        } catch (final IllegalArgumentException | com.github.zafarkhaja.semver.ParseException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, String.format("Failed to parse versionName: %1$s. " +
+        if (versionName.isEmpty()) return false
+        val comparison = try {
+            val conditionVersion = Version.valueOf(versionName)
+            val currentVersion = Version.valueOf(this.versionName)
+            Version.BUILD_AWARE_ORDER.compare(conditionVersion, currentVersion)
+        } catch (e: IllegalArgumentException) {
+            messager.printMessage(Diagnostic.Kind.ERROR, String.format("Failed to parse versionName: %1\$s. " +
                     "Please use a versionName that matches the specification on http://semver.org/", versionName),
-                    element);
+                    element)
 
             // Assume the break condition is met if the versionName is invalid.
-            return true;
+            return true
+        } catch (e: com.github.zafarkhaja.semver.ParseException) {
+            messager.printMessage(Diagnostic.Kind.ERROR, String.format("Failed to parse versionName: %1\$s. " +
+                    "Please use a versionName that matches the specification on http://semver.org/", versionName),
+                    element)
+            return true
         }
-
-        return !versionName.isEmpty() && comparison <= 0;
+        return versionName.isNotEmpty() && comparison <= 0
     }
 }
