@@ -18,9 +18,9 @@ package ie.stu.papercut.compiler
 import com.github.zafarkhaja.semver.Version
 import javax.lang.model.SourceVersion
 import com.google.auto.service.AutoService
+import ie.stu.papercut.Debt
 import javax.lang.model.element.TypeElement
 import ie.stu.papercut.Milestone
-import ie.stu.papercut.Refactor
 import java.lang.IllegalArgumentException
 import java.text.ParseException
 import javax.tools.Diagnostic
@@ -37,7 +37,7 @@ import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.element.Element
 
 @SupportedAnnotationTypes(
-        "ie.stu.papercut.Refactor",
+        "ie.stu.papercut.Debt",
         "ie.stu.papercut.Milestone"
 )
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -59,7 +59,7 @@ class AnnotationProcessor : AbstractProcessor() {
 
     override fun process(annotations: Set<TypeElement?>, roundEnv: RoundEnvironment): Boolean {
         buildMilestoneList(roundEnv.getElementsAnnotatedWith(Milestone::class.java))
-        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(Refactor::class.java))
+        parseTechDebtElements(roundEnv.getElementsAnnotatedWith(Debt::class.java))
         return true
     }
 
@@ -77,14 +77,14 @@ class AnnotationProcessor : AbstractProcessor() {
 
     private fun parseTechDebtElements(elements: Set<Element>) {
         elements.forEach { element ->
-            element.getAnnotation(Refactor::class.java)?.let { refactorAnnotation ->
-                val description: String = refactorAnnotation.value
-                val givenDate = refactorAnnotation.date
-                val stopShip = refactorAnnotation.stopShip
-                val milestone: String = refactorAnnotation.milestone
-                val versionCode: String = refactorAnnotation.versionCode
-                val versionName: String = refactorAnnotation.versionName
-                val annotationType: String = Refactor::class.java.simpleName
+            element.getAnnotation(Debt::class.java)?.let { debtAnnotation ->
+                val description: String = debtAnnotation.value
+                val givenDate = debtAnnotation.addedDate
+                val stopShip = debtAnnotation.stopShip
+                val milestone: String = debtAnnotation.milestone
+                val versionCode: Int = debtAnnotation.versionCode
+                val versionName: String = debtAnnotation.versionName
+                val annotationType: String = Debt::class.java.simpleName
 
                 val messageKind = if (stopShip) {
                     Diagnostic.Kind.ERROR
@@ -123,9 +123,9 @@ class AnnotationProcessor : AbstractProcessor() {
         }
     }
 
-    private fun noConditionsSet(date: Date?, milestone: String, versionCode: String,
+    private fun noConditionsSet(date: Date?, milestone: String, versionCode: Int,
                                 versionName: String): Boolean {
-        return date == null && milestone.isEmpty() && versionCode.isEmpty() && versionName.isEmpty()
+        return date == null && milestone.isEmpty() && versionCode == Int.MAX_VALUE && versionName.isEmpty()
     }
 
     private fun dateConditionMet(date: Date?): Boolean {
@@ -136,8 +136,10 @@ class AnnotationProcessor : AbstractProcessor() {
         return milestone.isNotEmpty() && !milestones.contains(milestone)
     }
 
-    private fun versionCodeConditionMet(versionCode: String): Boolean {
-        return versionCode.isNotEmpty() && versionCode.toInt() <= this.versionCode!!.toInt()
+    private fun versionCodeConditionMet(versionCode: Int): Boolean {
+        return this.versionCode?.let {
+            it.isNotEmpty() && versionCode != Int.MAX_VALUE && versionCode <= it.toInt()
+        } ?: false
     }
 
     private fun versionNameConditionMet(versionName: String, element: Element): Boolean {

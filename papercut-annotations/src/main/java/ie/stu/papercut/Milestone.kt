@@ -13,43 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ie.stu.papercut;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package ie.stu.papercut
 
 /**
  * Define a milestone for your project that has not yet been met.
  *
- * Any milestones defined in your codebase can be referenced in your {@link RemoveThis} or {@link Refactor} annotations.
- * Removing a milestone will cause any matching {@link RemoveThis} or {@link Refactor} to fail.
+ * Any milestones defined in your codebase can be referenced in your [Debt] annotations.
+ * Removing a milestone will cause any [Debt] annotations referencing it as a condition to fail.
  *
  * You may want to keep these milestone definitions together in one class so they are easy to manage. Milestones can be
  * attached to any field, but attaching them to unrelated fields with real use cases may lead to accidental removal.
  *
- * <pre><code>
- *    public class Milestones {
- *       {@literal @}Milestone("LOGIN_REDESIGN") public static final String LOGIN_REDESIGN = "LOGIN_REDESIGN";
- *    }
+ * ```
+ * @Milestone("LOGIN_REDESIGN") const val loginRedesign = "LOGIN_REDESIGN";
  *
- *    public class ThingDoer {
- *       {@literal @}Refactor(milestone = Milestones.LOGIN_REDESIGN)
- *        public void doSomethingHacky() {
+ * [...]
  *
- *        }
- *    }
- * </code></pre>
+ * class ThingDoer {
+ *
+ *     @Debt(milestone = Milestones.LOGIN_REDESIGN)
+ *     fun doSomethingHacky() {
+ *
+ *     }
+ *
+ * }
+ * ```
  */
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.FIELD)
-public @interface Milestone {
+@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.FIELD)
+annotation class Milestone(
     /**
-     * Specify the name of a milestone to be referenced in your {@link RemoveThis} or {@link Refactor} annotations'
-     * milestone parameter.
-     *
-     * @return Descriptive text for your development milestone
+     * Specify the name of a milestone to be referenced in your [Debt] annotations' <pre>milestone</pre>
+     * parameter.
      */
-    String value() default "";
-}
+    val value: String = ""
+)

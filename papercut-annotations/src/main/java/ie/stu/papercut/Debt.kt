@@ -35,8 +35,10 @@ annotation class Debt(
 
         /**
          * The date the Debt was added to the codebase. This can be used to help prioritize what debt to work on.
+         *
+         * Format must be YYYY-MM-DD.
          */
-        val added: String = "",
+        val addedDate: String = "",
 
         /**
          * A description of the Debt being added. This can be displayed when longer output is expected.
@@ -49,7 +51,52 @@ annotation class Debt(
         val id: String = "",
 
         /**
+         * A description of why this debt was added instead of resolved during development, e.g. time, external team
+         * support, lack of designs, etc.
+         */
+        val reason: String = "",
+
+        /**
          * An estimated cost of addressing the highlighted Debt.
          */
         val cost: String = "",
+
+        /**
+         * If this value is set to true, and any set conditions fail, Papercut will break your build. If it is set to
+         * false, Papercut will print a warning in your build output.
+         *
+         * Possible conditions: <pre>removalDate</pre>, <pre>milestone</pre>, <pre>versionCode</pre>, and
+         * <pre>versionName</pre>
+         *
+         * Default value is <pre>false</pre>.
+         */
+        val stopShip: Boolean = false,
+
+        /**
+         * The date by which the debt should be removed.
+         *
+         * Format must be YYYY-MM-DD.
+         */
+        val removalDate: String = "",
+
+        /**
+         * The [Milestone] by which the debt should be removed.
+         */
+        val milestone: String = "",
+
+        /**
+         * The version code by which the debt should be removed. This is an integer that typically increases for every
+         * build or release of your software.
+         *
+         * Default value is Int.MAX_VALUE
+         */
+        val versionCode: Int = Int.MAX_VALUE,
+
+        /**
+         * The version name by which the debt should be removed. Must meet the semantic versioning specification to
+         * be supported.
+         *
+         * @see <a href="http://semver.org">http://semver.org</a>
+         */
+        val versionName: String = "",
 )

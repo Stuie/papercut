@@ -42,7 +42,10 @@ class AnnotationProcessorTest {
     fun setup() {
         annotationProcessor = AnnotationProcessor()
 
-        val versionCodeOptions = mapOf("versionCode" to "1")
+        val versionCodeOptions = mapOf(
+            "versionCode" to "1",
+            "versionName" to "1.2.3"
+        )
 
         every { processingEnvironment.options } returns versionCodeOptions
         every { processingEnvironment.messager } returns messager

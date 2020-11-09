@@ -21,7 +21,6 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.7.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-
     testImplementation("io.mockk:mockk:1.10.2")
 }
 
