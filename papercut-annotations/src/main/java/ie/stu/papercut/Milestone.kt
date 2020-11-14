@@ -40,7 +40,11 @@ package ie.stu.papercut
  * ```
  */
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@Target(AnnotationTarget.FIELD)
+@Target(
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.LOCAL_VARIABLE,
+)
 annotation class Milestone(
     /**
      * Specify the name of a milestone to be referenced in your [Debt] annotations' <pre>milestone</pre>

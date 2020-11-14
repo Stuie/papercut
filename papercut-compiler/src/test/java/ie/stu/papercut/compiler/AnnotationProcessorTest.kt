@@ -26,7 +26,7 @@ import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
 
 class AnnotationProcessorTest {
-    lateinit var annotationProcessor: AnnotationProcessor
+    private lateinit var annotationProcessor: AnnotationProcessor
 
     @RelaxedMockK
     lateinit var processingEnvironment: ProcessingEnvironment

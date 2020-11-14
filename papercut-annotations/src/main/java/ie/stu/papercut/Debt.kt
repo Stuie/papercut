@@ -17,14 +17,19 @@ package ie.stu.papercut
  */
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
 @Target(
+        AnnotationTarget.CLASS,
+        AnnotationTarget.PROPERTY,
+        AnnotationTarget.FIELD,
+        AnnotationTarget.LOCAL_VARIABLE,
+        AnnotationTarget.VALUE_PARAMETER,
+        AnnotationTarget.CONSTRUCTOR,
         AnnotationTarget.FUNCTION,
         AnnotationTarget.PROPERTY_GETTER,
         AnnotationTarget.PROPERTY_SETTER,
-        AnnotationTarget.FIELD,
-        AnnotationTarget.ANNOTATION_CLASS,
-        AnnotationTarget.CLASS,
-        AnnotationTarget.CONSTRUCTOR,
-        // TODO Confirm this list
+        AnnotationTarget.TYPE,
+        AnnotationTarget.EXPRESSION,
+        AnnotationTarget.FILE,
+        AnnotationTarget.TYPEALIAS,
 )
 annotation class Debt(
         /**
