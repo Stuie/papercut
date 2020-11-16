@@ -17,3 +17,10 @@ package ie.stu.papercut.compiler
  */
 const val OPTION_VERSION_CODE = "versionCode"
 const val OPTION_VERSION_NAME = "versionName"
+
+const val VALUE = "value"
+const val DEBT_FOUND = "Debt found"
+const val WITH_DESCRIPTION = "with description"
+const val ADDED_DATE = "added date"
+const val DEBT_REASON = "debt reason"
+const val MILESTONE = "milestone"

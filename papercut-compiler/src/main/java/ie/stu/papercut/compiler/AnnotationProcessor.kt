@@ -21,11 +21,10 @@ import com.google.auto.service.AutoService
 import ie.stu.papercut.Debt
 import javax.lang.model.element.TypeElement
 import ie.stu.papercut.Milestone
-import java.lang.IllegalArgumentException
-import java.text.ParseException
 import javax.tools.Diagnostic
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
@@ -78,13 +77,15 @@ class AnnotationProcessor : AbstractProcessor() {
     private fun parseTechDebtElements(elements: Set<Element>) {
         elements.forEach { element ->
             element.getAnnotation(Debt::class.java)?.let { debtAnnotation ->
-                val description: String = debtAnnotation.value
-                val givenDate = debtAnnotation.addedDate
+                val value = debtAnnotation.value
+                val description = debtAnnotation.description
+                val reason = debtAnnotation.reason
+                val addedDate = debtAnnotation.addedDate
                 val stopShip = debtAnnotation.stopShip
-                val milestone: String = debtAnnotation.milestone
+                val milestone = debtAnnotation.milestone
+                val removalDate = debtAnnotation.removalDate
                 val versionCode: Int = debtAnnotation.versionCode
-                val versionName: String = debtAnnotation.versionName
-                val annotationType: String = Debt::class.java.simpleName
+                val versionName = debtAnnotation.versionName
 
                 val messageKind = if (stopShip) {
                     Diagnostic.Kind.ERROR
@@ -92,44 +93,47 @@ class AnnotationProcessor : AbstractProcessor() {
                     Diagnostic.Kind.WARNING
                 }
 
-                val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-                val date: Date? = try {
-                    if (givenDate.isNotEmpty()) {
-                        simpleDateFormat.parse(givenDate)
+                val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                val parsedRemovalDate: LocalDateTime? = try {
+                    if (removalDate.isNotEmpty()) {
+                        LocalDateTime.parse(removalDate, dateTimeFormatter)
                     } else {
                         null
                     }
-                } catch (e: ParseException) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Incorrect date format in Papercut annotation." +
-                            "Please use YYYY-MM-DD format.")
+                } catch (e: DateTimeParseException) {
+                    messager.printMessage(
+                        Diagnostic.Kind.ERROR,
+                        String.format(
+                            "Unrecognized date format in Papercut annotation '%1\$s'. Please use YYYY-MM-DD format " +
+                                    "for removalDate: %2\$s",
+                            removalDate,
+                            e.localizedMessage
+                        ),
+                        element
+                    )
                     null
                 }
 
-                var breakConditionMet = noConditionsSet(date, milestone, versionCode, versionName)
-                breakConditionMet = breakConditionMet || dateConditionMet(date)
-                breakConditionMet = breakConditionMet || milestoneConditionMet(milestone)
-                breakConditionMet = breakConditionMet || versionCodeConditionMet(versionCode)
-                breakConditionMet = breakConditionMet || versionNameConditionMet(versionName, element)
+                val breakConditionMet = noConditionsSet(parsedRemovalDate, milestone, versionCode, versionName)
+                        || dateConditionMet(parsedRemovalDate)
+                        || milestoneConditionMet(milestone)
+                        || versionCodeConditionMet(versionCode)
+                        || versionNameConditionMet(versionName, element)
 
                 if (breakConditionMet) {
-                    if (description.isNotEmpty()) {
-                        messager.printMessage(messageKind, String.format("@%1\$s found with description %2\$s at: ",
-                                annotationType, description), element)
-                    } else {
-                        messager.printMessage(messageKind, String.format("@%1\$s found at: ", annotationType), element)
-                    }
+                    printDebtMessage(messager, messageKind, value, description, addedDate, reason, milestone, element)
                 }
             }
         }
     }
 
-    private fun noConditionsSet(date: Date?, milestone: String, versionCode: Int,
+    private fun noConditionsSet(date: LocalDateTime?, milestone: String, versionCode: Int,
                                 versionName: String): Boolean {
         return date == null && milestone.isEmpty() && versionCode == Int.MAX_VALUE && versionName.isEmpty()
     }
 
-    private fun dateConditionMet(date: Date?): Boolean {
-        return date != null && (date.before(Date()) || date == Date())
+    private fun dateConditionMet(date: LocalDateTime?): Boolean {
+        return date != null && (date.isBefore(LocalDateTime.now()) || date == LocalDateTime.now())
     }
 
     private fun milestoneConditionMet(milestone: String): Boolean {
@@ -145,23 +149,85 @@ class AnnotationProcessor : AbstractProcessor() {
     private fun versionNameConditionMet(versionName: String, element: Element): Boolean {
         // Drop out quickly if there's no versionName set otherwise the try/catch below is doomed to fail.
         if (versionName.isEmpty()) return false
+
         val comparison = try {
             val conditionVersion = Version.valueOf(versionName)
             val currentVersion = Version.valueOf(this.versionName)
             Version.BUILD_AWARE_ORDER.compare(conditionVersion, currentVersion)
-        } catch (e: IllegalArgumentException) {
-            messager.printMessage(Diagnostic.Kind.ERROR, String.format("Failed to parse versionName: %1\$s. " +
-                    "Please use a versionName that matches the specification on http://semver.org/", versionName),
-                    element)
+        } catch (e: Exception) {
+            messager.printMessage(
+                Diagnostic.Kind.ERROR,
+                String.format(
+                    "Failed to parse version name: %1\$s or %2\$s. Please use a versionName that matches the " +
+                        "specification on http://semver.org/",
+                    versionName,
+                    this.versionName
+                ),
+                element
+            )
 
             // Assume the break condition is met if the versionName is invalid.
             return true
-        } catch (e: com.github.zafarkhaja.semver.ParseException) {
-            messager.printMessage(Diagnostic.Kind.ERROR, String.format("Failed to parse versionName: %1\$s. " +
-                    "Please use a versionName that matches the specification on http://semver.org/", versionName),
-                    element)
-            return true
         }
+
         return versionName.isNotEmpty() && comparison <= 0
+    }
+
+    private fun printDebtMessage(
+        messager: Messager,
+        messageKind: Diagnostic.Kind,
+        value: String,
+        description: String,
+        addedDate: String,
+        reason: String,
+        milestone: String,
+        element: Element,
+    ) {
+        val messageBuilder = StringBuilder(DEBT_FOUND)
+
+        messageBuilder.append(if (value.isNotEmpty()) {
+            " $VALUE '%1\$s',"
+        } else {
+            "%1\$s"
+        })
+
+        if (addedDate.isNotEmpty()) {
+            messageBuilder.append(" $ADDED_DATE '%2\$s',")
+        } else {
+            messageBuilder.append("%2\$s")
+        }
+
+        if (reason.isNotEmpty()) {
+            messageBuilder.append(" $DEBT_REASON '%3\$s',")
+        } else {
+            messageBuilder.append("%3\$s")
+        }
+
+        if (milestone.isNotEmpty()) {
+            messageBuilder.append(" $MILESTONE '%4\$s',")
+        } else {
+            messageBuilder.append("%4\$s")
+        }
+
+        if (description.isNotEmpty()) {
+            messageBuilder.append(" $WITH_DESCRIPTION '%5\$s',")
+        } else {
+            messageBuilder.append("%5\$s")
+        }
+
+        messageBuilder.append(" at: ")
+
+        messager.printMessage(
+            messageKind,
+            String.format(
+                messageBuilder.toString(),
+                value,
+                addedDate,
+                reason,
+                milestone,
+                description
+            ),
+            element
+        )
     }
 }
