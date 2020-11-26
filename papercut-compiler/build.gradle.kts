@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
+    kotlin("kapt")
 }
 
 tasks {
@@ -14,6 +15,7 @@ tasks {
 dependencies {
     implementation(project(":papercut-annotations"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10")
+    kapt("com.google.auto.service:auto-service:1.0-rc7")
     implementation("com.google.auto.service:auto-service:1.0-rc7")
     implementation("com.google.auto:auto-common:0.11")
     implementation("com.github.zafarkhaja:java-semver:0.9.0")

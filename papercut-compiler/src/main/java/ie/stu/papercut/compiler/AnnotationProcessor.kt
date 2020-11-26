@@ -21,8 +21,8 @@ import com.google.auto.service.AutoService
 import ie.stu.papercut.Debt
 import javax.lang.model.element.TypeElement
 import ie.stu.papercut.Milestone
+import java.time.LocalDate
 import javax.tools.Diagnostic
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import javax.annotation.processing.AbstractProcessor
@@ -94,9 +94,9 @@ class AnnotationProcessor : AbstractProcessor() {
                 }
 
                 val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                val parsedRemovalDate: LocalDateTime? = try {
+                val parsedRemovalDate: LocalDate? = try {
                     if (removalDate.isNotEmpty()) {
-                        LocalDateTime.parse(removalDate, dateTimeFormatter)
+                        LocalDate.parse(removalDate, dateTimeFormatter)
                     } else {
                         null
                     }
@@ -104,8 +104,8 @@ class AnnotationProcessor : AbstractProcessor() {
                     messager.printMessage(
                         Diagnostic.Kind.ERROR,
                         String.format(
-                            "Unrecognized date format in Papercut annotation '%1\$s'. Please use YYYY-MM-DD format " +
-                                    "for removalDate: %2\$s",
+                            "Unrecognized date format in Papercut annotation '%1\$s'. Please use yyyy-MM-dd format " +
+                                    "for removalDate (e.g. 2020-01-31): %2\$s",
                             removalDate,
                             e.localizedMessage
                         ),
@@ -127,13 +127,13 @@ class AnnotationProcessor : AbstractProcessor() {
         }
     }
 
-    private fun noConditionsSet(date: LocalDateTime?, milestone: String, versionCode: Int,
+    private fun noConditionsSet(date: LocalDate?, milestone: String, versionCode: Int,
                                 versionName: String): Boolean {
         return date == null && milestone.isEmpty() && versionCode == Int.MAX_VALUE && versionName.isEmpty()
     }
 
-    private fun dateConditionMet(date: LocalDateTime?): Boolean {
-        return date != null && (date.isBefore(LocalDateTime.now()) || date == LocalDateTime.now())
+    private fun dateConditionMet(date: LocalDate?): Boolean {
+        return date != null && (date.isBefore(LocalDate.now()) || date == LocalDate.now())
     }
 
     private fun milestoneConditionMet(milestone: String): Boolean {

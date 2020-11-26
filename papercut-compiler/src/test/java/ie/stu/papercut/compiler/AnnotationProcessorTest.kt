@@ -44,6 +44,7 @@ class AnnotationProcessorTest {
     private val sampleDebtDescription = "Debt description"
     private val specialEditionReleaseVersionName = "Special Edition Release"
     private val invalidDate = "01-01-2000"
+    private val validDate = "2020-11-01"
     private val sampleAddedDate = "1999-12-31"
 
     private lateinit var subject: AnnotationProcessor
@@ -320,6 +321,17 @@ class AnnotationProcessorTest {
         }
 
         assertTrue(messageSlot.captured.contains(invalidDate))
+    }
+
+    @Test
+    fun `process does not print error for valid removal date format`() {
+        setupDebtAnnotationWithoutCondition()
+        every { debtAnnotationWithoutCondition.removalDate } returns validDate
+
+        subject.init(processingEnvironment)
+        subject.process(emptySet(), roundEnvironment)
+
+        verify(exactly = 0) { messager.printMessage(Diagnostic.Kind.ERROR, any(), any()) }
     }
 
     private fun executeCaptureAndReturn(): Result {
