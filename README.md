@@ -3,63 +3,47 @@ Papercut
 
 Keep your codebase simple.
 
-  * Annotate parts of your code that shouldn't make it to production
-  * Automatically fail your build
-  * Remember to remove code you don't need
+  * Keep track of technical debt in your code
+  * Set conditions for removal and catch them during your build
 
-@RemoveThis and @Refactor
+@Debt
 -----------
 
-The `@RemoveThis` and `@Refactor` annotations can be used interchangeably, but a `@RemoveThis` will trigger a build failure by default, whereas a `@Refactor` will only trigger a warning.
+The `@Debt` annotation can be used to track technical debt in your codebase, along with requirement conditions for its removal.
 
-```java
+```kotlin
 class TemporaryHack {
-    @RemoveThis
-    private static final boolean DEBUG = true;
+    @Debt
+    val debug = true
 }
 ```
 
-```java
+```kotlin
 class ThingDoer {
-    @RemoveThis(date = "2017-01-01", value = "After SOME_FEATURE has launched")
-    private void someHackyMethod() {
+    @Debt(
+        addedDate = "2020-01-01",
+        value = "After SOME_FEATURE has launched"
+    )
+    private fun someHackyMethod() {
 		// Here there be monsters
     }
 }
 ```
 
-Your build will fail at compile time by default.
+The `stopShip` parameter can be used to print an error message during your build. By default you just get a warning.
 
-```
-:app:compileDebugJavaWithJavac
-/Users/stu/workspaces/TestApp/app/src/main/java/testing/TemporaryHack.java:10: error: STOP SHIP: @RemoveThis found at:
-    private static final boolean DEBUG = true;
-                                 ^
-/Users/stu/workspaces/TestApp/app/src/main/java/testing/ThingDoer.java:12: error: @RemoveThis found with description 'After SOME_FEATURE has launched' at:
-    private void someHackyMethod() {
-                 ^
-2 errors
-:app:compileDebugJavaWithJavac FAILED
-```
-
-If you set the `stopShip` parameter to false in the annotation then you will only receive a warning. This matches the behavior of `Refactor`.
-
-```java
-@RemoveThis(value = "After SOME_FEATURE has launched", stopShip = false)
-private void someHackyMethod() {
+```kotlin
+@Debt(
+    value = "After SOME_FEATURE has launched",
+    removalDate = "2021-01-01",
+    stopShip = true
+)
+private fun someHackyMethod() {
     //TODO FIXME
 }
 ```
 
-```
-:app:compileDebugJavaWithJavac
-/Users/stu/workspaces/TestApp/app/src/main/java/testing/SomeApplication.java:54: warning: @RemoveThis found with description 'After SOME_FEATURE has launched
-    private void someHackyMethod() {
-                 ^
-1 warning
-```
-
-With a small modification to your build.gradle file you can use version codes or version names instead of dates in your annotations.
+With a small modification to your build.gradle file you can use version codes or version names as well as dates in your annotations.
 
 In the case of an Android app, you can pass your version code and name to Papercut using the configuration below.
 
@@ -78,12 +62,12 @@ android {
 }
 ```
 
-The arguments must both be passed as strings. The `versionCode` will be passed to `Integer.parseInt()` and the `versionName` must match the [semantic versioning schema][2].
+The arguments must both be passed as strings. The `versionCode` will be parsed as an integer and the `versionName` must match the [semantic versioning schema][2].
 
 You can then use the `versionCode` or `versionName` parameters in your annotations as below.
 
-```java
-@Refactor(versionName = "0.4.0")
+```kotlin
+@Debt(versionName = "0.4.0")
 private void fetchSomethingRemote() {
     // Temporary hack, please remove
 }
@@ -94,24 +78,23 @@ private void fetchSomethingRemote() {
 
 You can define milestones by which you would like to refactor or remove code. When you reach a milestone just delete
 the `@Milestone` annotated field. If you use constants as in the first example below then deleting the field
-should cause your IDE to highlight the instances that referenced it. If you use plain strings in your `@RemoveThis` or
-`@Refactor` annotations then they must match your defined `@Milestone`s exactly, as in the second example.
+should cause your IDE to highlight the instances that referenced it. If you use plain strings in your `@Debt`
+annotations then they must match your defined `@Milestone`s exactly, as in the second example.
 
-```java
-public class Milestones {
-    @Milestone("LOGIN_REDESIGN") public static final String LOGIN_REDESIGN = "LOGIN_REDESIGN";
-    @Milestone("SOME_FEATURE") public static final String SOME_FEATURE = "SOME_FEATURE";
-    @Milestone("VERSION_2") public static final String VERSION_2 = "VERSION_2";
+```kotlin
+class Milestones {
+    @Milestone("LOGIN_REDESIGN") val loginRedesign = "LOGIN_REDESIGN"
+    @Milestone("SOME_FEATURE") val someFeature = "SOME_FEATURE"
 }
 
-public class ImportantThingDoer {
-    @Refactor(milestone = Milestones.LOGIN_REDESIGN)
-    private void onlyUsedByLoginScreen() {
+class ImportantThingDoer {
+    @Debt(milestone = Milestones.loginRedesign)
+    private fun onlyUsedByLoginScreen() {
 
     }
 
-    @RemoveThis(milestone = "VERSION_2")
-    public void callOldAPI() {
+    @Debt(milestone = "SOME_FEATURE")
+    fun callOldAPI() {
 
     }
 }
@@ -121,22 +104,24 @@ For full documentation and additional information, see [the website][1].
 
 Download
 --------
+For Kotlin projects with Kotlin DSL gradle files:
 
-```groovy
+```kotlin
+plugins {
+    kotlin("kapt") version "1.4.20"
+}
+
 dependencies {
-	compile: 'ie.stu:papercut-annotations:0.0.4'
-	annotationProcessor: 'ie.stu:papercut-compiler:0.0.4'
+    implementation("ie.stu:papercut-annotations:0.9.1")
+    kapt("ie.stu:papercut-compiler:0.9.1")
 }
 ```
 
-To use Papercut only in release builds you can alter the annotationProcessor line to use `releaseAnnotationProcessor` or
-`debugAnnotationProcessor` to suit your needs. Delaying the execution until you're trying to build your release version
-may be lead to unexpected build failures.
-
+For Java projects with groovy gradle files:
 ```groovy
 dependencies {
-    compile: 'ie.stu:papercut-annotations:0.0.4'
-    releaseAnnotationProcessor: 'ie.stu:papercut-compiler:0.0.4'
+    implementation: 'ie.stu:papercut-annotations:0.9.1'
+    annotationProcessor: 'ie.stu:papercut-compiler:0.9.1'
 }
 ```
 
@@ -157,8 +142,5 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
-
 [1]: http://stuie.github.com/papercut/
 [2]: http://semver.org
-[snap]: https://oss.sonatype.org/content/repositories/snapshots/
