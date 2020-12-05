@@ -100,8 +100,6 @@ class ImportantThingDoer {
 }
 ```
 
-For full documentation and additional information, see [the website][1].
-
 Download
 --------
 For Kotlin projects with Kotlin DSL gradle files:
