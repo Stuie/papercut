@@ -21,6 +21,8 @@ import com.google.auto.service.AutoService
 import ie.stu.papercut.Debt
 import javax.lang.model.element.TypeElement
 import ie.stu.papercut.Milestone
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
 import java.time.LocalDate
 import javax.tools.Diagnostic
 import java.time.format.DateTimeFormatter
@@ -42,6 +44,7 @@ import javax.lang.model.element.Element
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions(OPTION_VERSION_CODE, OPTION_VERSION_NAME)
 @AutoService(Processor::class)
+@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.ISOLATING)
 class AnnotationProcessor : AbstractProcessor() {
     private val milestones = mutableSetOf<String>()
     private lateinit var messager: Messager

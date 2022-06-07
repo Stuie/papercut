@@ -1,20 +1,18 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.4.10"
+    id("org.jetbrains.kotlin.jvm") version "1.6.21"
 }
 
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
         gradlePluginPortal()
     }
 }
 
 allprojects {
-    version = "0.9.1"
+    version = "0.10.0"
 
     repositories {
-        jcenter()
         mavenCentral()
         gradlePluginPortal()
     }
