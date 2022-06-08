@@ -95,14 +95,6 @@ class AnnotationProcessorTest {
     }
 
     @Test
-    fun `init retrieves options from environment`() {
-        subject.init(processingEnvironment)
-
-        verify { processingEnvironment.options[OPTION_VERSION_CODE] }
-        verify { processingEnvironment.options[OPTION_VERSION_NAME] }
-    }
-
-    @Test
     fun `process prints warning when no conditions set`() {
         setupDebtAnnotationWithoutCondition()
 

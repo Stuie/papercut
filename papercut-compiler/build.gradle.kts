@@ -25,16 +25,17 @@ tasks {
 
 dependencies {
     implementation(project(":papercut-annotations"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10")
-    kapt("com.google.auto.service:auto-service:1.0-rc7")
-    implementation("com.google.auto.service:auto-service:1.0-rc7")
-    implementation("com.google.auto:auto-common:0.11")
+    kapt("com.google.auto.service:auto-service:1.0.1")
+    kapt("net.ltgt.gradle.incap:incap-processor:0.3")
+    implementation("com.google.auto.service:auto-service:1.0.1")
+    implementation("com.google.auto:auto-common:1.2.1")
     implementation("com.github.zafarkhaja:java-semver:0.9.0")
+    compileOnly("net.ltgt.gradle.incap:incap:0.3")
     compileOnly(files(Jvm.current().toolsJar))
 
-    testImplementation(platform("org.junit:junit-bom:5.7.0"))
+    testImplementation(platform("org.junit:junit-bom:5.8.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.mockk:mockk:1.10.2")
+    testImplementation("io.mockk:mockk:1.12.4")
 }
 
 tasks.test {

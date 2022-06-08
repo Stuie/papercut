@@ -21,7 +21,7 @@ class TemporaryHack {
 ```kotlin
 class ThingDoer {
     @Debt(
-        addedDate = "2020-01-01",
+        addedDate = "2022-01-01",
         value = "After SOME_FEATURE has launched"
     )
     private fun someHackyMethod() {
@@ -35,7 +35,7 @@ The `stopShip` parameter can be used to print an error message during your build
 ```kotlin
 @Debt(
     value = "After SOME_FEATURE has launched",
-    removalDate = "2021-01-01",
+    removalDate = "2023-12-31",
     stopShip = true
 )
 private fun someHackyMethod() {
@@ -106,27 +106,27 @@ For Kotlin projects with Kotlin DSL gradle files:
 
 ```kotlin
 plugins {
-    kotlin("kapt") version "1.4.20"
+    kotlin("kapt") version "1.6.21"
 }
 
 dependencies {
-    implementation("ie.stu:papercut-annotations:0.9.1")
-    kapt("ie.stu:papercut-compiler:0.9.1")
+    implementation("ie.stu:papercut-annotations:0.10.0")
+    kapt("ie.stu:papercut-compiler:0.10.0")
 }
 ```
 
 For Java projects with groovy gradle files:
 ```groovy
 dependencies {
-    implementation: 'ie.stu:papercut-annotations:0.9.1'
-    annotationProcessor: 'ie.stu:papercut-compiler:0.9.1'
+    implementation: 'ie.stu:papercut-annotations:0.10.0'
+    annotationProcessor: 'ie.stu:papercut-compiler:0.10.0'
 }
 ```
 
 License
 -------
 
-    Copyright 2016 Stuart Gilbert
+    Copyright 2016-2022 Stuart Gilbert
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
