@@ -1,9 +1,9 @@
 [versions]
 kotlin = "2.3.0"
-autoService = "1.0.1"
-autoCommon = "1.2.1"
+autoService = "1.1.1"
+autoCommon = "1.2.2"
 javaSemver = "0.10.2"
-incap = "0.3"
+incap = "1.0.0"
 junit = "6.0.2"
 mockk = "1.14.7"
 
