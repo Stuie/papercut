@@ -1,10 +1,18 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val papercutPublishingUsername: String? =
+    System.getenv("PAPERCUT_MAVEN_USERNAME")
+        ?: findProperty("papercutPublishingUsername") as String?
 
-val papercutPublishingUsername: String by project
-val papercutPublishingPassword: String by project
+val papercutPublishingPassword: String? =
+    System.getenv("PAPERCUT_MAVEN_PASSWORD")
+        ?: findProperty("papercutPublishingPassword") as String?
+
+// Map papercut-specific signing properties to standard signing plugin properties
+findProperty("papercutSigningKeyId")?.let { extra["signing.keyId"] = it }
+findProperty("papercutSigningPassword")?.let { extra["signing.password"] = it }
+findProperty("papercutSigningSecretKeyRingFile")?.let { extra["signing.secretKeyRingFile"] = it }
 
 plugins {
-    kotlin("jvm")
+    id("org.jetbrains.kotlin.jvm")
     `java-library`
     `maven-publish`
     signing
@@ -15,9 +23,9 @@ java {
     withSourcesJar()
 }
 
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
@@ -66,5 +74,10 @@ publishing {
 }
 
 signing {
+    val signingKey = System.getenv("GPG_SIGNING_KEY")
+    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    if (signingKey != null && signingPassword != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign(publishing.publications["annotations"])
 }

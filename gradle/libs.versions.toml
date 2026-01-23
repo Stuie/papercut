@@ -1,0 +1,23 @@
+[versions]
+kotlin = "2.3.0"
+autoService = "1.0.1"
+autoCommon = "1.2.1"
+javaSemver = "0.10.2"
+incap = "0.3"
+junit = "6.0.2"
+mockk = "1.14.7"
+
+[libraries]
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
+auto-common = { module = "com.google.auto:auto-common", version.ref = "autoCommon" }
+java-semver = { module = "com.github.zafarkhaja:java-semver", version.ref = "javaSemver" }
+incap = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
+incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }

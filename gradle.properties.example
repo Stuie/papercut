@@ -1,0 +1,8 @@
+# Copy this file's content to ~/.gradle/gradle.properties and fill in your values
+# OR copy to project root as gradle.properties (not recommended)
+
+papercutSigningKeyId=YOUR_KEY_ID
+papercutSigningPassword=YOUR_SIGNING_PASSWORD
+papercutSigningSecretKeyRingFile=/path/to/secring.gpg
+papercutPublishingUsername=YOUR_MAVEN_USERNAME
+papercutPublishingPassword=YOUR_MAVEN_PASSWORD

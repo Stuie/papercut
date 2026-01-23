@@ -1,5 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.6.21"
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
 }
 
 buildscript {
@@ -10,10 +11,17 @@ buildscript {
 }
 
 allprojects {
-    version = "0.10.0"
+    version = "0.11.0"
 
     repositories {
         mavenCentral()
         gradlePluginPortal()
+    }
+}
+
+subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 }

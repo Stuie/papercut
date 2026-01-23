@@ -1,12 +1,19 @@
-import org.gradle.internal.jvm.Jvm
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val papercutPublishingUsername: String? =
+    System.getenv("PAPERCUT_MAVEN_USERNAME")
+        ?: findProperty("papercutPublishingUsername") as String?
 
-val papercutPublishingUsername: String by project
-val papercutPublishingPassword: String by project
+val papercutPublishingPassword: String? =
+    System.getenv("PAPERCUT_MAVEN_PASSWORD")
+        ?: findProperty("papercutPublishingPassword") as String?
+
+// Map papercut-specific signing properties to standard signing plugin properties
+findProperty("papercutSigningKeyId")?.let { extra["signing.keyId"] = it }
+findProperty("papercutSigningPassword")?.let { extra["signing.password"] = it }
+findProperty("papercutSigningSecretKeyRingFile")?.let { extra["signing.secretKeyRingFile"] = it }
 
 plugins {
-    kotlin("jvm")
-    kotlin("kapt")
+    id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlin.kapt")
     `java-library`
     `maven-publish`
     signing
@@ -17,25 +24,25 @@ java {
     withSourcesJar()
 }
 
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
 dependencies {
     implementation(project(":papercut-annotations"))
-    kapt("com.google.auto.service:auto-service:1.0.1")
-    kapt("net.ltgt.gradle.incap:incap-processor:0.3")
-    implementation("com.google.auto.service:auto-service:1.0.1")
-    implementation("com.google.auto:auto-common:1.2.1")
-    implementation("com.github.zafarkhaja:java-semver:0.9.0")
-    compileOnly("net.ltgt.gradle.incap:incap:0.3")
-    compileOnly(files(Jvm.current().toolsJar))
+    kapt(libs.auto.service)
+    kapt(libs.incap.processor)
+    implementation(libs.auto.service)
+    implementation(libs.auto.common)
+    implementation(libs.java.semver)
+    compileOnly(libs.incap)
 
-    testImplementation(platform("org.junit:junit-bom:5.8.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.mockk:mockk:1.12.4")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockk)
 }
 
 tasks.test {
@@ -90,5 +97,10 @@ publishing {
 }
 
 signing {
+    val signingKey = System.getenv("GPG_SIGNING_KEY")
+    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    if (signingKey != null && signingPassword != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign(publishing.publications["compiler"])
 }

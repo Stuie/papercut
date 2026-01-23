@@ -1,4 +1,0 @@
-include ':papercut-annotations'
-include ':papercut-compiler'
-
-rootProject.name = 'papercut-parent'

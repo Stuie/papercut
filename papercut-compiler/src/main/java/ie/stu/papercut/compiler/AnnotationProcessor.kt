@@ -41,7 +41,7 @@ import javax.lang.model.element.Element
         "ie.stu.papercut.Debt",
         "ie.stu.papercut.Milestone"
 )
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @SupportedOptions(OPTION_VERSION_CODE, OPTION_VERSION_NAME)
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.ISOLATING)
