@@ -70,10 +70,10 @@ class AnnotationProcessor : AbstractProcessor() {
     }
 
     private fun buildMilestoneList(elements: Set<Element>) {
-        for (element in elements) {
-            val milestone = element.getAnnotation(Milestone::class.java)
-            val milestoneName: String = milestone.value
-            milestones.add(milestoneName)
+        elements.forEach { element ->
+            element.getAnnotation(Milestone::class.java)?.let { milestone ->
+                milestones.add(milestone.value)
+            }
         }
     }
 
@@ -107,8 +107,8 @@ class AnnotationProcessor : AbstractProcessor() {
                     messager.printMessage(
                         Diagnostic.Kind.ERROR,
                         String.format(
-                            "Unrecognized date format in Papercut annotation '%1\$s'. Please use yyyy-MM-dd format " +
-                                    "for removalDate (e.g. 2020-01-31): %2\$s",
+                            $$"Unrecognized date format in Papercut annotation '%1$s'. Please use yyyy-MM-dd format " +
+                                    $$"for removalDate (e.g. 2020-01-31): %2$s",
                             removalDate,
                             e.localizedMessage
                         ),
@@ -150,21 +150,22 @@ class AnnotationProcessor : AbstractProcessor() {
     }
 
     private fun versionNameConditionMet(versionName: String, element: Element): Boolean {
-        // Drop out quickly if there's no versionName set otherwise the try/catch below is doomed to fail.
+        // Drop out quickly if there's no versionName set, otherwise the try/catch below is doomed to fail.
         if (versionName.isEmpty()) return false
 
         val comparison = try {
-            val conditionVersion = Version.valueOf(versionName)
-            val currentVersion = Version.valueOf(this.versionName)
-            Version.BUILD_AWARE_ORDER.compare(conditionVersion, currentVersion)
+            val conditionVersion = Version.parse(versionName)
+            val currentVersion = Version.parse(this.versionName)
+            conditionVersion.compareTo(currentVersion)
         } catch (e: Exception) {
             messager.printMessage(
                 Diagnostic.Kind.ERROR,
                 String.format(
-                    "Failed to parse version name: %1\$s or %2\$s. Please use a versionName that matches the " +
-                        "specification on http://semver.org/",
+                    $$"Failed to parse version name: %1$s or %2$s. Please use a versionName that matches the " +
+                        $$"specification on https://semver.org/ - %3$s",
                     versionName,
-                    this.versionName
+                    this.versionName,
+                    e
                 ),
                 element
             )
@@ -189,33 +190,33 @@ class AnnotationProcessor : AbstractProcessor() {
         val messageBuilder = StringBuilder(DEBT_FOUND)
 
         messageBuilder.append(if (value.isNotEmpty()) {
-            " $VALUE '%1\$s',"
+            $$" $$VALUE '%1$s',"
         } else {
-            "%1\$s"
+            $$"%1$s"
         })
 
         if (addedDate.isNotEmpty()) {
-            messageBuilder.append(" $ADDED_DATE '%2\$s',")
+            messageBuilder.append($$" $$ADDED_DATE '%2$s',")
         } else {
-            messageBuilder.append("%2\$s")
+            messageBuilder.append($$"%2$s")
         }
 
         if (reason.isNotEmpty()) {
-            messageBuilder.append(" $DEBT_REASON '%3\$s',")
+            messageBuilder.append($$" $$DEBT_REASON '%3$s',")
         } else {
-            messageBuilder.append("%3\$s")
+            messageBuilder.append($$"%3$s")
         }
 
         if (milestone.isNotEmpty()) {
-            messageBuilder.append(" $MILESTONE '%4\$s',")
+            messageBuilder.append($$" $$MILESTONE '%4$s',")
         } else {
-            messageBuilder.append("%4\$s")
+            messageBuilder.append($$"%4$s")
         }
 
         if (description.isNotEmpty()) {
-            messageBuilder.append(" $WITH_DESCRIPTION '%5\$s',")
+            messageBuilder.append($$" $$WITH_DESCRIPTION '%5$s',")
         } else {
-            messageBuilder.append("%5\$s")
+            messageBuilder.append($$"%5$s")
         }
 
         messageBuilder.append(" at: ")

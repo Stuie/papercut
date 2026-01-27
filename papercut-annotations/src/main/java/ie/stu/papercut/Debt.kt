@@ -15,7 +15,7 @@ package ie.stu.papercut
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.SOURCE)
 @Target(
         AnnotationTarget.CLASS,
         AnnotationTarget.PROPERTY,
@@ -51,12 +51,12 @@ annotation class Debt(
         val description: String = "",
 
         /**
-         * A URL or other identifier for an issue, story, epic, task, card, etc. that represents this Debt.
+         * A URL or another identifier for an issue, story, epic, task, card, etc. that represents this Debt.
          */
         val id: String = "",
 
         /**
-         * A description of why this debt was added instead of resolved during development, e.g. time, external team
+         * A description of why this debt was added instead of resolved during development, e.g., time, external team
          * support, lack of designs, etc.
          */
         val reason: String = "",
@@ -101,7 +101,7 @@ annotation class Debt(
          * The version name by which the debt should be removed. Must meet the semantic versioning specification to
          * be supported.
          *
-         * @see <a href="http://semver.org">http://semver.org</a>
+         * @see <a href="https://semver.org">https://semver.org</a>
          */
         val versionName: String = "",
 )
